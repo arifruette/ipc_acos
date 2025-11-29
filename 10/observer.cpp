@@ -2,7 +2,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <csignal>
-#include <cstring>
 #include <cerrno>
 #include <sys/stat.h>
 
@@ -16,12 +15,14 @@ void handle_sigint(int) { running = 0; }
 int main() {
     signal(SIGINT, handle_sigint);
 
+    pid_t pid = getpid();
+
     if (mkfifo(FIFO_NAME, 0666) == -1 && errno != EEXIST) {
         perror("mkfifo");
         return 1;
     }
 
-    cout << "[Observer] Started. Waiting for logs...\n";
+    cout << "[Observer " << pid << "] Started. Waiting for logs...\n";
 
     int fd = open(FIFO_NAME, O_RDONLY | O_NONBLOCK);
     if (fd < 0) {
@@ -35,7 +36,7 @@ int main() {
         ssize_t n = read(fd, buf, sizeof(buf) - 1);
         if (n > 0) {
             buf[n] = '\0';
-            cout << buf;
+            cout << "[Observer " << pid << "] " << buf;
             cout.flush();
             continue;
         }
@@ -53,7 +54,8 @@ int main() {
         }
     }
 
-    cout << "\n[Observer] Shutdown.\n";
+    cout << "\n[Observer " << pid << "] Shutdown.\n";
     close(fd);
+    // FIFO не удаляем, чтобы можно было перезапускать наблюдателей/teacher
     return 0;
 }

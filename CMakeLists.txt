@@ -10,4 +10,5 @@ add_executable(personal_3 4-6/exam.cpp
         9/observer.cpp
         9/teacher.cpp
         9/student.cpp
+        10/observer.cpp
 )
